@@ -40,15 +40,6 @@ const assignmentModel = (sequelize) => {
         {
             timestamps: false,
         });
-
-        (async () => {
-            try {
-              await Assignment.sync({ alter: true });
-              console.log('User table synced or altered successfully.');
-            } catch (error) {
-              console.error('Error syncing or altering User table:', error);
-            }
-        })();
     return Assignment;
 }
 
