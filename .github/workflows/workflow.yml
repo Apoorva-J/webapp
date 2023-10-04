@@ -37,6 +37,7 @@ jobs:
     - run: npm ci
     - run: npm run test
       env:
+        POSTGRES_DIALECT: postgres
         POSTGRES_HOST: localhost
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: admin123
