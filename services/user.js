@@ -9,7 +9,6 @@ const accountUpdatedString = currentDate.toISOString();
 const getDataFromCsv=async () => {
     try {
         await db.sequelize.sync({ alter: true });
-
         const csvData = fs.readFileSync(path.join('C:/Users/apoor/Desktop/cloud-computing/Apoorva_Jain_002737702_03/webapp/users.csv'), 'utf-8');
         const rows = csvData.split('\n').map((row) => row.split(','));
 
@@ -27,15 +26,7 @@ const getDataFromCsv=async () => {
 
         console.log('Database bootstrapped successfully.');
     } catch (error) {
-        (async () => {
-            try {
-              await db.sequelize.sync({ alter: true });
-              console.log('User table synced or altered successfully.');
-            } catch (error) {
-              console.error('Error syncing or altering User table:', error);
-            }
-        })();
-        console.log('Error bootstrapping the database:');
+        console.log('Error bootstrapping the databasessss:');
     }
 }
 
