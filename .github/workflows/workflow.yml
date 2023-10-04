@@ -9,15 +9,19 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:latest
+      postgres:
+        image: postgres:latest
         env:
-          MYSQL_ROOT_PASSWORD: "admin123"
-          MYSQL_DATABASE: "assignment1_db"
-          MYSQL_ROOT_HOST: "%"
+          POSTGRES_USER: "%"
+          POSTGRES_PASSWORD: "admin123"
+          POSTGRES_DB: "assignment1_db"
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s 
+          --health-retries 3
 
     steps:
       - name: Checkout code
