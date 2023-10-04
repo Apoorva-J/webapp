@@ -2,6 +2,14 @@ import { DataTypes } from "sequelize";
 import bcrypt from "bcrypt";
 
 const userModel = (sequelize) => {
+    (async () => {
+        try {
+          await userModel.sync({ alter: true });
+          console.log('User table synced or altered successfully.');
+        } catch (error) {
+          console.error('Error syncing or altering User table:', error);
+        }
+    })();
     let User = sequelize.define("user", {
         id: {
             type: DataTypes.UUID,
@@ -43,15 +51,6 @@ const userModel = (sequelize) => {
             user.password = bcrypt.hashSync(user.password, 12);
         }
     });
-    (async () => {
-        try {
-          await userModel.sync({ alter: true });
-          console.log('User table synced or altered successfully.');
-        } catch (error) {
-          console.error('Error syncing or altering User table:', error);
-        }
-    })();
-
     return User;
 }
 

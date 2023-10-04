@@ -27,6 +27,14 @@ const getDataFromCsv=async () => {
 
         console.log('Database bootstrapped successfully.');
     } catch (error) {
+        (async () => {
+            try {
+              await db.sequelize.sync({ alter: true });
+              console.log('User table synced or altered successfully.');
+            } catch (error) {
+              console.error('Error syncing or altering User table:', error);
+            }
+        })();
         console.log('Error bootstrapping the database:');
     }
 }
