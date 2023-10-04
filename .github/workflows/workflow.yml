@@ -1,4 +1,5 @@
 name: workflow
+
 on:
   pull_request:
     branches: [main]
@@ -8,19 +9,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:latest
+      mysql:
+        image: mysql:latest
         env:
-          POSTGRES_USER: "%"
-          POSTGRES_PASSWORD: "admin123"
-          POSTGRES_DB: "assignment1_db"
+          MYSQL_ROOT_PASSWORD: "admin123"
+          MYSQL_DATABASE: "assignment1_db"
+          MYSQL_ROOT_HOST: "%"
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s 
-          --health-retries 3
+        options: --health-cmd="pg_isready ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
@@ -29,12 +26,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 18.16.0
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Wait for PostgreSQL to become ready
+          node-version: 18.17.1
+      - name: create and configure
         run: |
           touch .env
           echo port=5432 >> .env
@@ -43,6 +36,8 @@ jobs:
           echo user=postgres >> .env
           echo password=admin123 >> .env
           echo database=assignment1_db >> .env
+      - name: Install dependencies
+        run: npm install
 
       - name: Run tests
         run: npm test
