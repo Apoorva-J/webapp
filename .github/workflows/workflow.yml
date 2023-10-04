@@ -12,7 +12,7 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_USER: "%"
+          POSTGRES_USER: "postgres"
           POSTGRES_PASSWORD: "admin123"
           POSTGRES_DB: "assignment1_db"
         ports:
