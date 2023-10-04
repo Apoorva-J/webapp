@@ -16,7 +16,7 @@ jobs:
           POSTGRES_PASSWORD: "admin123"
           POSTGRES_DB: "assignment1_db"
         ports:
-          - 8080:8080
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -34,7 +34,7 @@ jobs:
       - name: create and configure
         run: |
           touch .env
-          echo port=8080 >> .env
+          echo port=5432 >> .env
           echo host=localhost >> .env
           echo dialect=postgres >> .env
           echo user=postgres >> .env
