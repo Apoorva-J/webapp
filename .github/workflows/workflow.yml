@@ -24,7 +24,6 @@ jobs:
           POSTGRES_DB: assignment1_db
         ports:
           - 5432:5432
-        options: -e POSTGRES_PASSWORD=admin123 -d
 
     steps:
     - uses: actions/checkout@v3
