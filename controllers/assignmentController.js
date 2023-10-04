@@ -73,6 +73,7 @@ export const getAssignments = async (request, response) => {
       else return response.status(200).send(assignments);
     }
   } catch (error) {
+    console.log("db error");
     return response.status(400).send("");
   }
 };
@@ -101,12 +102,14 @@ export const getAssignmentUsingId = async (request, response) => {
       else return response.status(200).send(assignments);
     }
   } catch (error) {
+    console.log("db error");
     return response.status(400).send("");
   }
 };
 
 // Update assignment
 export const updatedAssignment = async (request, response) => {
+  const bodyKeys = Object.keys(request.body);
   const authenticated = await authUser(request, response);
   if (authenticated === null) {
     return response.status(401).send("");
@@ -146,6 +149,7 @@ export const updatedAssignment = async (request, response) => {
       return response.status(200).send("");
     }
   } catch (error) {
+    console.log("db error");
     return response.status(400).send("");
   }
 };
@@ -175,6 +179,7 @@ export const remove = async (request, response) => {
     await removeAssignment(id);
     return response.status(200).send("");
   } catch (error) {
+    console.log("db error");
     return response.status(400).send("");
   }
 };

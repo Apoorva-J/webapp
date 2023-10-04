@@ -1,44 +1,35 @@
-name: CI for Application
+name: workflow
 
 on:
   pull_request:
     branches: [main]
 
- 
-
 jobs:
-  build:
+  connect-remote:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.16.0]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     services:
-      postgres:
+      mysql:
         image: postgres:latest
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: admin123
-          POSTGRES_DB: assignment1_db
+          MYSQL_ROOT_PASSWORD: "admin123"
+          MYSQL_DATABASE: "assignment1_db"
+          MYSQL_ROOT_HOST: "%"
         ports:
           - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18
 
-    - run: npm i
-    - run: npm run test
-      env:
-        POSTGRES_DIALECT: postgres
-        POSTGRES_HOST: localhost
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: admin123
-        POSTGRES_DB: assignment1_db
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
