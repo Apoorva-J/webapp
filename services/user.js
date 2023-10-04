@@ -8,7 +8,7 @@ const accountUpdatedString = currentDate.toISOString();
 
 const getDataFromCsv=async () => {
     try {
-        await db.sequelize.sync({ create: true });
+        await db.sequelize.sync({ alter: true });
 
         const csvData = fs.readFileSync(path.join('C:/Users/apoor/Desktop/cloud-computing/Apoorva_Jain_002737702_03/webapp/users.csv'), 'utf-8');
         const rows = csvData.split('\n').map((row) => row.split(','));
