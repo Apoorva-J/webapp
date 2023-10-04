@@ -1,4 +1,4 @@
-name: workflow
+name: MySQL Integration Test
 
 on:
   pull_request:
@@ -9,19 +9,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:latest
+      mysql:
+        image: mysql:latest
         env:
-          POSTGRES_USER: "postgres"
-          POSTGRES_PASSWORD: "admin123"
-          POSTGRES_DB: "assignment1_db"
+          MYSQL_ROOT_PASSWORD: "admin123"
+          MYSQL_DATABASE: "assignment1_db"
+          MYSQL_ROOT_HOST: "%"
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s 
-          --health-retries 3
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
@@ -30,18 +26,21 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 18.17.1
+          node-version: 18
+          
       - name: create and configure
         run: |
           touch .env
-          echo port=5432 >> .env
+          echo port=8080 >> .env
           echo host=localhost >> .env
-          echo dialect=postgres >> .env
-          echo user=postgres >> .env
+          echo dialect=mysql >> .env
+          echo user=root >> .env
           echo password=admin123 >> .env
           echo database=assignment1_db >> .env
+
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
         run: npm test
+
