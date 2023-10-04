@@ -1,5 +1,4 @@
 name: workflow
-
 on:
   pull_request:
     branches: [main]
@@ -12,12 +11,16 @@ jobs:
       postgres:
         image: postgres:latest
         env:
+          POSTGRES_USER: "%"
           POSTGRES_PASSWORD: "admin123"
           POSTGRES_DB: "assignment1_db"
-          POSTGRES_USER: "%"
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s 
+          --health-retries 3
 
     steps:
       - name: Checkout code
@@ -26,10 +29,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 18
+          node-version: 18.16.0
 
       - name: Install dependencies
         run: npm install
+
+      - name: Wait for PostgreSQL to become ready
+        run: |
+          touch .env
+          echo port=5432 >> .env
+          echo host=localhost >> .env
+          echo dialect=postgres >> .env
+          echo user=postgres >> .env
+          echo password=admin123 >> .env
+          echo database=assignment1_db >> .env
 
       - name: Run tests
         run: npm test
