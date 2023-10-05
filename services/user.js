@@ -31,4 +31,3 @@ const getDataFromCsv=async () => {
 }
 
 export default getDataFromCsv;
-
