@@ -31,6 +31,3 @@ const getDataFromCsv=async () => {
 }
 
 export default getDataFromCsv;
-
-
-//C:/Users/apoor/Desktop/cloud-computing/Apoorva_Jain_002737702_03/webapp/users.csv
