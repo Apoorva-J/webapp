@@ -66,7 +66,7 @@ export const getAssignments = async (request, response) => {
     const assignments = await getAllAssignments();
 
     if (assignments.length === 0) {
-      return response.status(404).send("");
+      return response.status(204).send("");
     } else {
       if (request.body && Object.keys(request.body).length > 0)
         return response.status(400).send();
@@ -88,7 +88,7 @@ export const getAssignmentUsingId = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(404).send("");
+  if (!assignment) return response.status(204).send("");
 
   try {
     const id = request.params.id;
@@ -118,7 +118,7 @@ export const updatedAssignment = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(404).send("");
+  if (!assignment) return response.status(204).send("");
   if (assignment.user_id !== authenticated) {
     return response.status(401).send("");
   }
@@ -165,7 +165,7 @@ export const remove = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(404).send(""); //added
+  if (!assignment) return response.status(204).send(""); //added
   if (assignment.user_id !== authenticated) {
     return response.status(401).send("");
   }
