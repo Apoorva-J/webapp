@@ -38,7 +38,6 @@ jobs:
           echo password=${{ secrets.PASSWORD }} >> .env
           echo database=${{ secrets.DATABASE }} >> .env
 
-
       - name: Install dependencies
         run: npm install
 
