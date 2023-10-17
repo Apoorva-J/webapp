@@ -79,12 +79,12 @@ build {
   ]
 
   provisioner "file" {
-    source      = "users.csv"
+    source      = "./users.csv"
     destination = "/home/admin/users.csv"
   }
 
   provisioner "file" {
-    source      = "webapp.zip"
+    source      = "./webapp.zip"
     destination = "/home/admin/webapp.zip"
   }
 
