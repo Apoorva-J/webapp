@@ -17,5 +17,6 @@ sudo mv /home/admin/users.csv /home/admin/opt/webapp/users.csv
 cd webapp
 sudo npm i
 # sudo npm audit fix
-sudo npm start
-# npm run test
+npm run test
+# sudo npm start
+
