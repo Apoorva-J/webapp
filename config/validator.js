@@ -3,12 +3,23 @@ import db from "../config/dbSetup.js"
 
 export const auth = async (email, password) => {
     const user = await db.user.findOne({ where: { emailid: email } });
+    console.log("user forbidden", user);
     if (!user || !bcrypt.compareSync(password, user.password)) {
         return null;
     } else {
         return user.id;
     }
 }
+
+
+export const healthCheckPoint = async () => {
+    try {
+      await db.sequelize.authenticate();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
 
 export const authUser = async (request, response) => {
     const header = request.headers.authorization;

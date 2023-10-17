@@ -28,7 +28,7 @@ const assignmentModel = (sequelize) => {
             },
         },
         deadline: {
-            type: DataTypes.STRING,
+            type: DataTypes.DATE,
         },
         assignment_created: {
             type: DataTypes.STRING,
