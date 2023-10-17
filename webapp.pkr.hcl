@@ -17,25 +17,25 @@ variable "ssh_username" {
   default = "admin"
 }
 
-# variable "subnet_id" {
-#   type    = string
-#   default = "subnet-005fd51a56ac28586"
-# }
+variable "subnet_id" {
+  type    = string
+  default = "subnet-005fd51a56ac28586"
+}
 
-# variable "user" {
-#   type    = string
-#   default = "${env("USER")}"
-# }
+variable "user" {
+  type    = string
+  default = "${env("USER")}"
+}
 
-# variable "database" {
-#   type    = string
-#   default = "${env("DATABASE")}"
-# }
+variable "database" {
+  type    = string
+  default = "${env("DATABASE")}"
+}
 
-# variable "pd" {
-#   type    = string
-#   default = "${env("PD")}"
-# }
+variable "pd" {
+  type    = string
+  default = "${env("PASSWORD")}"
+}
 
 source "amazon-ebs" "webapp" {
   source_ami_filter {
@@ -62,7 +62,7 @@ source "amazon-ebs" "webapp" {
 
   instance_type = "t2.micro"
   ssh_username  = "admin"
-  # subnet_id     = var.subnet_id
+  subnet_id     = var.subnet_id
 
   launch_block_device_mappings {
     device_name           = "/dev/xvda"
@@ -90,10 +90,10 @@ build {
 
   provisioner "shell" {
     script = "setup.sh"
-    # environment_vars = [
-    #   "pd=${var.pd}",
-    #   "database=${var.database}",
-    #   "user=${var.user}"
-    # ]
+    environment_vars = [
+      "pd=${var.PASSWORD}",
+      "database=${var.DATABASE}",
+      "user=${var.USER}"
+    ]
   }
 }
