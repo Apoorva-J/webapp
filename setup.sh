@@ -1,8 +1,5 @@
 #!/bin/sh
 
-echo "password=$PASSWORD"
-echo "database=$DATABASE"
-
 sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt install unzip
@@ -15,9 +12,6 @@ mysql -u root -p$PASSWORD -Bse "CREATE DATABASE $DATABASE;"
 mysql -u root -p$PASSWORD -Bse "SHOW DATABASES;"
 sudo mkdir opt
 sudo mv /home/admin/webapp.zip /home/admin/opt/webapp.zip
-echo "------------------------------------------------------------------------"
-pwd
-echo "------------------------------------------------------------------------"
 sudo mv /home/admin/users.csv /home/admin/opt/webapp/users.csv
 cd opt
 sudo unzip -o webapp.zip
