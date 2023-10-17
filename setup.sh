@@ -13,7 +13,9 @@ sudo mkdir opt
 sudo mv /home/admin/webapp.zip /home/admin/opt/webapp.zip
 cd opt
 sudo unzip -o webapp.zip
+echo "This is a print statement."
 ls -la
+echo "This is a print statement."
 sudo mv /home/admin/users.csv /home/admin/opt/webapp/users.csv
 cd webapp
 sudo npm i
