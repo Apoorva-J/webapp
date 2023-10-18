@@ -2,7 +2,9 @@ name: MySQL Integration Test
 
 on:
   pull_request:
-    branches: [main]
+    branches: [assignment5]
+  push:
+    branches: [assignment5]
 
 jobs:
   connect-remote:
