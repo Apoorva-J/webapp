@@ -79,20 +79,6 @@ variable "instance_type" {
   default = null
 }
 
-variable "source_ami" {
-  type    = string
-  default = null
-}
-
-variable "ssh_username" {
-  type    = string
-  default = null
-}
-
-variable "provisioner_webapp_source" {
-  type    = string
-  default = null
-}
 
 variable "launch_block_device_mappings_volume_size" {
   type    = string
