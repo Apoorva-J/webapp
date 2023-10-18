@@ -5,8 +5,8 @@ ami_users                                          = ["504987508647", "059182746
 aws_region                                         = "us-east-1"
 ami_name                                           = "csye6225"
 ami_description                                    = "AMI for CSYE6225"
-delay_seconds                                      = 120
-max_attempts                                       = 50
+aws_polling_delay_seconds                          = "120"
+aws_polling_max_attempts                           = "50"
 launch_block_device_mappings_device_name           = "/dev/xvda"
 launch_block_device_mappings_volume_size           = "25"
 launch_block_device_mappings_volume_type           = "gp2"
@@ -15,3 +15,5 @@ provisioner_users_source                           = "./users.csv"
 provisioner_users_destination                      = "/home/admin/users.csv"
 provisioner_webapp_source                          = "./webapp.zip"
 provisioner_webapp_destination                     = "/home/admin/webapp.zip"
+provisioner_shell_script                           = "./setup.sh"
+

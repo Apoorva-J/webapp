@@ -26,7 +26,7 @@ const getDataFromCsv=async () => {
 
         console.log('Database bootstrapped successfully.');
     } catch (error) {
-        console.log('Error bootstrapping the databasessss:');
+        console.log('Error bootstrapping the databases:');
     }
 }
 
