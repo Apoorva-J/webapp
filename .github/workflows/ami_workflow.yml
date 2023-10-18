@@ -54,4 +54,4 @@ jobs:
           export USER=${{ secrets.USER }}
           export PD=${{ secrets.PASSWORD }}
           export DATABASE=${{ secrets.DATABASE }}
-          packer build -var 'USER=${{ secrets.USER }}' -var 'DATABASE=${{ secrets.DATABASE }}' -var 'PASSWORD=${{ secrets.PASSWORD }}' webapp.pkr.hcl
+          packer build -var 'USER=${{ secrets.USER }}' -var 'DATABASE=${{ secrets.DATABASE }}' -var 'PASSWORD=${{ secrets.PASSWORD }}' -var-file="variables.pkr.hcl" aws-debian.pkr.hcl
