@@ -131,3 +131,5 @@ dist
 
 # zip file
 .webapp.zip
+
+package-lock.json
