@@ -6,17 +6,23 @@ packer {
     }
   }
 }
-variable "aws_region" {
+
+variable "PASSWORD" {
   type    = string
-  default = null
+  default = "${env("PASSWORD")}"
 }
 
-variable "ssh_username" {
+variable "DATABASE" {
   type    = string
-  default = null
+  default = "${env("DATABASE")}"
 }
 
-variable "source_ami" {
+variable "USER" {
+  type    = string
+  default = "${env("USER")}"
+}
+
+variable "ami_name" {
   type    = string
   default = null
 }
@@ -26,13 +32,23 @@ variable "ami_description" {
   default = null
 }
 
-variable "delay_seconds" {
-  type = string
+variable "aws_region" {
+  type    = string
   default = null
 }
 
-variable "max_attempts" {
-  type = string
+variable "ami_users" {
+  type    = list(string)
+  default = null
+}
+
+variable "aws_polling_delay_seconds" {
+  type    = number
+  default = null
+}
+
+variable "aws_polling_max_attempts" {
+  type    = string
   default = null
 }
 
@@ -41,34 +57,12 @@ variable "instance_type" {
   default = null
 }
 
-variable "launch_block_device_mappings_volume_size" {
-  type    = number
-  default = null
-}
-
-variable "launch_block_device_mappings_volume_type" {
+variable "source_ami" {
   type    = string
   default = null
 }
 
-variable "launch_block_device_mappings_delete_on_termination" {
-  type    = bool
-  default = null
-}
-
-variable "build_sources" {
-  type    = string
-  default = null
-}
-
-
-
-variable "script" {
-  type    = string
-  default = null
-}
-
-variable "ami_name" {
+variable "ssh_username" {
   type    = string
   default = null
 }
@@ -78,68 +72,62 @@ variable "launch_block_device_mappings_device_name" {
   default = null
 }
 
- 
+variable "launch_block_device_mappings_volume_size" {
+  type    = string
+  default = null
+}
+
+variable "launch_block_device_mappings_volume_type" {
+  type    = string
+  default = null
+}
+
+variable "launch_block_device_mappings_delete_on_termination" {
+  type    = string
+  default = null
+}
 
 variable "provisioner_users_source" {
-  type = string
+  type    = string
   default = null
 }
-
- 
 
 variable "provisioner_users_destination" {
-  type = string
+  type    = string
   default = null
 }
-
- 
 
 variable "provisioner_webapp_source" {
-  type = string
+  type    = string
   default = null
 }
-
- 
 
 variable "provisioner_webapp_destination" {
-  type = string
+  type    = string
   default = null
 }
 
-variable "USER" {
+variable "provisioner_shell_script" {
   type    = string
-  default = "${env("USER")}"
-}
-
-variable "DATABASE" {
-  type    = string
-  default = "${env("DATABASE")}"
-}
-
-variable "PASSWORD" {
-  type    = string
-  default = "${env("PASSWORD")}"
-}
-
-variable "ami_users" {
-  type    = list(string)
   default = null
 }
 
-source "amazon-ebs" "webapp" {
+source "amazon-ebs" "awsdebian" {
 
-  source_ami="${var.source_ami}"
+  # ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
   ami_name        = "${var.ami_name}"
   ami_description = "${var.ami_description}"
   region          = "${var.aws_region}"
   ami_users       = "${var.ami_users}"
 
   aws_polling {
-    delay_seconds = "${var.delay_seconds}"
-    max_attempts  = "${var.max_attempts}"
+    delay_seconds = "${var.aws_polling_delay_seconds}"
+    max_attempts  = "${var.aws_polling_max_attempts}"
+
   }
 
   instance_type = "${var.instance_type}"
+  source_ami    = "${var.source_ami}"
   ssh_username  = "${var.ssh_username}"
 
   launch_block_device_mappings {
@@ -150,10 +138,9 @@ source "amazon-ebs" "webapp" {
   }
 }
 
-
 build {
   sources = [
-    "source.amazon-ebs.webapp"
+    "source.amazon-ebs.awsdebian"
   ]
 
   provisioner "file" {
@@ -167,11 +154,11 @@ build {
   }
 
   provisioner "shell" {
-    script = "setup.sh"
+    script = "${var.provisioner_shell_script}"
     environment_vars = [
       "PASSWORD=${var.PASSWORD}",
       "DATABASE=${var.DATABASE}",
-      "USER=${var.USER}"
+      "USER=${var.USER}",
     ]
   }
 }

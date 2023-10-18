@@ -47,5 +47,5 @@ jobs:
         run: packer init .
 
       - name: Run Packer file
-        run: packer build -var 'USER=${{ secrets.USER }}' -var 'DATABASE=${{ secrets.DATABASE }}' -var 'PASSWORD=${{ secrets.PASSWORD }}' -var-file="variables.pkr.hcl" aws-debian.pkr.hcl
+        run: packer build -var 'USER=${{ secrets.USER }}' -var 'DATABASE=${{ secrets.DATABASE }}' -var 'PASSWORD=${{ secrets.PASSWORD }}' -var-file="variables.pkrvars.hcl" aws-debian.pkr.hcl
 
