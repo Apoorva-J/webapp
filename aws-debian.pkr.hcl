@@ -12,10 +12,12 @@ variable "PASSWORD" {
   default = "${env("PASSWORD")}"
 }
 
+
 variable "DATABASE" {
   type    = string
   default = "${env("DATABASE")}"
 }
+
 
 variable "USER" {
   type    = string
@@ -47,6 +49,21 @@ variable "ami_region" {
   default = null
 }
 
+variable "source_ami" {
+  type    = string
+  default = null
+}
+
+variable "ssh_username" {
+  type    = string
+  default = null
+}
+
+variable "launch_block_device_mappings_device_name" {
+  type    = string
+  default = null
+}
+
 variable "aws_polling_delay_seconds" {
   type    = number
   default = null
@@ -72,7 +89,7 @@ variable "ssh_username" {
   default = null
 }
 
-variable "launch_block_device_mappings_device_name" {
+variable "provisioner_webapp_source" {
   type    = string
   default = null
 }
@@ -124,7 +141,7 @@ source "amazon-ebs" "awsdebian" {
   ami_description = "${var.ami_description}"
   region          = "${var.aws_region}"
   ami_users       = "${var.ami_users}"
-  ami_regions      = "${var.ami_region}"
+  ami_regions     = "${var.ami_region}"
 
   aws_polling {
     delay_seconds = "${var.aws_polling_delay_seconds}"
