@@ -9,7 +9,7 @@ const accountUpdatedString = currentDate.toISOString();
 const getDataFromCsv=async () => {
     try {
         await db.sequelize.sync({ alter: true });
-        const csvData = fs.readFileSync(path.join('/root/opt/webapp/users.csv'), 'utf-8');
+        const csvData = fs.readFileSync(path.join('/home/admin/opt/users.csv'), 'utf-8');
         const rows = csvData.split('\n').map((row) => row.split(','));
 
         for (let i = 1; i < rows.length; i++) {
@@ -26,7 +26,7 @@ const getDataFromCsv=async () => {
 
         console.log('Database bootstrapped successfully.');
     } catch (error) {
-        console.log('Error bootstrapping the databasessss:');
+        console.log('Error bootstrapping the databases:');
     }
 }
 

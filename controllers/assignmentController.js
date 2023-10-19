@@ -9,53 +9,75 @@ import {
 import db from "../config/dbSetup.js";
 import { authUser } from "../config/validator.js";
 
+const health = await healthCheck();
+
 // Create assignment
 export const post = async (request, response) => {
-  const authenticated = await authUser(request, response);
-
-  if (authenticated === null) {
-    return response.status(401).send("");
-  }
-
-  console.log("request body" + Object.keys(request.body).length);
-  console.log("console" + Object.keys(request.body));
-
-  const bodyKeys = Object.keys(request.body);
-
   try {
-    const newDetails = {
-      ...request.body,
-      user_id: authenticated,
-      assignment_created: new Date().toISOString(),
-      assignment_updated: new Date().toISOString(),
-    };
-    if (
-      bodyKeys.some(
-        (bodyVal) =>
-          ![
-            "name",
-            "points",
-            "num_of_attempts",
-            "deadline",
-            "assignment_created",
-            "assignment_updated",
-          ].includes(bodyVal)
-      )
-    ) {
-      console.log("hi");
-      response.status(400).send("");
-    } else {
-      await addAssignment(newDetails);
-      return response.status(200).send("");
+    if (health !== true) {
+      return response
+        .status(503)
+        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+        .send("");
     }
-  } catch (error) {
-    console.log("error" + error);
-    return response.status(400).send("");
+
+    const authenticated = await authUser(request, response);
+
+    if (authenticated === null) {
+      return response.status(401).send("");
+    }
+
+    const bodyKeys = Object.keys(request.body);
+    const requiredKeys = ["name", "points", "num_of_attempts", "deadline"];
+    const optionalKeys = ["assignment_created", "assignment_updated"];
+
+    // Check if all required keys are present
+    const missingKeys = requiredKeys.filter((key) => !bodyKeys.includes(key));
+
+    if (missingKeys.length > 0) {
+      return response
+        .status(400)
+        .send("Missing required keys: " + missingKeys.join(", "));
+    }
+
+    // Check if there are any additional keys in the payload
+    const extraKeys = bodyKeys.filter(
+      (key) => !requiredKeys.includes(key) && !optionalKeys.includes(key)
+    );
+
+    if (extraKeys.length > 0) {
+      return response
+        .status(400)
+        .send("Invalid keys in the payload: " + extraKeys.join(", "));
+    }
+
+    try {
+      const newDetails = {
+        ...request.body,
+        user_id: authenticated,
+        assignment_created: new Date().toISOString(),
+        assignment_updated: new Date().toISOString(),
+      };
+      await addAssignment(newDetails);
+      return response.status(201).send("");
+    } catch (error) {
+      console.log("error" + error);
+      return response.status(400).send("");
+    }
+  } catch {
+    return response.status(400).json({error:"Syntax error"}).send();
   }
 };
 
 // Get all assignments
 export const getAssignments = async (request, response) => {
+  if (health !== true) {
+    return response
+      .status(503)
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send("");
+  }
+
   const authenticated = await authUser(request, response);
 
   if (authenticated === null) {
@@ -65,13 +87,9 @@ export const getAssignments = async (request, response) => {
   try {
     const assignments = await getAllAssignments();
 
-    if (assignments.length === 0) {
-      return response.status(204).send("");
-    } else {
-      if (request.body && Object.keys(request.body).length > 0)
-        return response.status(400).send();
-      else return response.status(200).send(assignments);
-    }
+    if (request.body && Object.keys(request.body).length > 0)
+      return response.status(400).send();
+    else return response.status(200).send(assignments);
   } catch (error) {
     console.log("db error");
     return response.status(400).send("");
@@ -80,6 +98,13 @@ export const getAssignments = async (request, response) => {
 
 // Get assignment by Id
 export const getAssignmentUsingId = async (request, response) => {
+  if (health !== true) {
+    return response
+      .status(503)
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send("");
+  }
+
   const authenticated = await authUser(request, response);
   if (authenticated === null) {
     return response.status(401).send("");
@@ -88,19 +113,15 @@ export const getAssignmentUsingId = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(204).send("");
+  if (!assignment) return response.status(204).send(""); //check for no assignment status
 
   try {
     const id = request.params.id;
     const assignments = await getAssignmentById(id);
 
-    if (assignments.length === 0) {
-      return response.status(404).send("");
-    } else {
-      if (request.body && Object.keys(request.body).length > 0)
-        return response.status(400).send();
-      else return response.status(200).send(assignments);
-    }
+    if (request.body && Object.keys(request.body).length > 0)
+      return response.status(400).send();
+    else return response.status(200).send(assignments);
   } catch (error) {
     console.log("db error");
     return response.status(400).send("");
@@ -109,7 +130,13 @@ export const getAssignmentUsingId = async (request, response) => {
 
 // Update assignment
 export const updatedAssignment = async (request, response) => {
-  const bodyKeys = Object.keys(request.body);
+  if (health !== true) {
+    return response
+      .status(503)
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send("");
+  }
+
   const authenticated = await authUser(request, response);
   if (authenticated === null) {
     return response.status(401).send("");
@@ -120,7 +147,33 @@ export const updatedAssignment = async (request, response) => {
   });
   if (!assignment) return response.status(204).send("");
   if (assignment.user_id !== authenticated) {
-    return response.status(401).send("");
+    return response.status(403).send("");
+  }
+
+  const bodyKeys = Object.keys(request.body);
+
+  const requiredKeys = ["name", "points", "num_of_attempts", "deadline"];
+
+  const optionalKeys = ["assignment_created", "assignment_updated"];
+
+  // Check if all required keys are present
+  const missingKeys = requiredKeys.filter((key) => !bodyKeys.includes(key));
+
+  if (missingKeys.length > 0) {
+    return response
+      .status(400)
+      .send("Missing required keys: " + missingKeys.join(", "));
+  }
+
+  // Check if there are any additional keys in the payload
+  const extraKeys = bodyKeys.filter(
+    (key) => !requiredKeys.includes(key) && !optionalKeys.includes(key)
+  );
+
+  if (extraKeys.length > 0) {
+    return response
+      .status(400)
+      .send("Invalid keys in the payload: " + extraKeys.join(", "));
   }
 
   try {
@@ -129,25 +182,8 @@ export const updatedAssignment = async (request, response) => {
       ...request.body,
       assignment_updated: new Date().toISOString(),
     };
-    if (
-      bodyKeys.some(
-        (bodyVal) =>
-          ![
-            "name",
-            "points",
-            "num_of_attempts",
-            "deadline",
-            "assignment_created",
-            "assignment_updated",
-          ].includes(bodyVal)
-      )
-    ) {
-      console.log("hi");
-      response.status(400).send("");
-    } else {
-      await updateAssignment(newDetails, id);
-      return response.status(200).send("");
-    }
+    await updateAssignment(newDetails, id);
+    return response.status(200).send("");
   } catch (error) {
     console.log("db error");
     return response.status(400).send("");
@@ -156,6 +192,13 @@ export const updatedAssignment = async (request, response) => {
 
 // Remove assignment
 export const remove = async (request, response) => {
+  if (health !== true) {
+    return response
+      .status(503)
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send("");
+  }
+
   const authenticated = await authUser(request, response);
 
   if (authenticated === null) {
@@ -167,7 +210,7 @@ export const remove = async (request, response) => {
   });
   if (!assignment) return response.status(204).send(""); //added
   if (assignment.user_id !== authenticated) {
-    return response.status(401).send("");
+    return response.status(403).send("");
   }
 
   if (request.body && Object.keys(request.body).length > 0) {
