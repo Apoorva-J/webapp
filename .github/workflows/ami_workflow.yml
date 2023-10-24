@@ -33,7 +33,7 @@ jobs:
           packer version
 
 
-             - name: zip all files
+      - name: zip all files
         run: zip -r webapp.zip .
 
       - name: Configure AWS credentials
