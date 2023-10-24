@@ -16,5 +16,5 @@ provisioner_users_destination                      = "/home/admin/users.csv"
 provisioner_webapp_source                          = "./webapp.zip"
 provisioner_webapp_destination                     = "/home/admin/webapp.zip"
 provisioner_shell_script                           = "./setup.sh"
-ami_region                                         = ["us-east-1", "us-west-1"]
+ami_region                                         = ["us-east-1"]
 date_format                                        = "YYYY_MM_DD_hh_mm_ss"
