@@ -42,4 +42,4 @@ jobs:
 
 
       - name: Run Packer validate
-        run: packer validate -var 'USER=${{ secrets.USER }}' -var 'DATABASE=${{ secrets.DATABASE }}' -var 'PASSWORD=${{ secrets.PASSWORD }}' -var-file="variables.pkrvars.hcl" aws-debian.pkr.hcl
+        run: packer validate -var-file="variables.pkrvars.hcl" aws-debian.pkr.hcl
