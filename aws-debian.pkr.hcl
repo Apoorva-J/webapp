@@ -108,6 +108,16 @@ variable "date_format" {
   default = null
 }
 
+variable "provisioner_service_source" {
+  type    = string
+  default = null
+}
+
+variable "provisioner_service_destination" {
+  type    = string
+  default = null
+}
+
 source "amazon-ebs" "awsdebian" {
   ami_name        = "${var.ami_name}_${formatdate("${var.date_format}", timestamp())}"
   ami_description = "${var.ami_description}"
@@ -149,8 +159,8 @@ build {
   }
 
   provisioner "file" {
-    source      = "./aws-debian.service"
-    destination = "/home/admin/"
+    source      = "${var.provisioner_service_source}"
+    destination = "${var.provisioner_service_destination}"
   }
 
   provisioner "shell" {
