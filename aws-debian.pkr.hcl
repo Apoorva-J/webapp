@@ -9,103 +9,103 @@ packer {
 
 variable "ami_name" {
   type    = string
-  default = null
+  default = "csye6225_"
 }
 
 variable "ami_description" {
   type    = string
-  default = null
+  default = "AMI for CSYE6225"
 }
 
 variable "aws_region" {
   type    = string
-  default = null
+  default = "us-east-1"
 }
 
 variable "ami_users" {
   type    = list(string)
-  default = null
+  default = ["504987508647", "059182746429"]
 }
 
 variable "ami_region" {
   type    = list(string)
-  default = null
+  default = ["us-east-1"]
 }
 
 variable "source_ami" {
   type    = string
-  default = null
+  default = "ami-06db4d78cb1d3bbf9"
 }
 
 variable "ssh_username" {
   type    = string
-  default = null
+  default = "admin"
 }
 
 variable "launch_block_device_mappings_device_name" {
   type    = string
-  default = null
+  default = "/dev/xvda"
 }
 
 variable "aws_polling_delay_seconds" {
-  type    = number
-  default = null
+  type    = string
+  default = "120"
 }
 
 variable "aws_polling_max_attempts" {
   type    = string
-  default = null
+  default = "50"
 }
 
 variable "instance_type" {
   type    = string
-  default = null
+  default = "t2.micro"
 }
 
 
 variable "launch_block_device_mappings_volume_size" {
   type    = string
-  default = null
+  default = "25"
 }
 
 variable "launch_block_device_mappings_volume_type" {
   type    = string
-  default = null
+  default = "gp2"
 }
 
 variable "launch_block_device_mappings_delete_on_termination" {
   type    = string
-  default = null
+  default = "true"
 }
 
 variable "provisioner_users_source" {
   type    = string
-  default = null
+  default = "./users.csv"
 }
 
 variable "provisioner_users_destination" {
   type    = string
-  default = null
+  default = "/home/admin/users.csv"
 }
 
 variable "provisioner_webapp_source" {
   type    = string
-  default = null
+  default = "./webapp.zip"
 }
 
 variable "provisioner_webapp_destination" {
   type    = string
-  default = null
+  default = "/home/admin/webapp.zip"
 }
 
 variable "provisioner_shell_script" {
   type    = string
-  default = null
+  default = "./setup.sh"
 }
 
 variable "date_format" {
   type    = string
-  default = null
+  default = "YYYY_MM_DD_hh_mm_ss"
 }
 
 variable "provisioner_service_source" {
