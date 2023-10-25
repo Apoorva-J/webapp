@@ -149,8 +149,8 @@ build {
   }
 
   provisioner "file" {
-    source      = "./aws-debian.service"
-    destination = "/home/admin/"
+    source      = "${var.provisioner_service_source}"
+    destination = "${var.provisioner_service_destination}"
   }
 
   provisioner "shell" {
