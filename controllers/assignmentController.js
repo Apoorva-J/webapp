@@ -145,7 +145,7 @@ export const updatedAssignment = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(204).send("");
+  if (!assignment) return response.status(404).send("");
   if (assignment.user_id !== authenticated) {
     return response.status(403).send("");
   }
@@ -183,7 +183,7 @@ export const updatedAssignment = async (request, response) => {
       assignment_updated: new Date().toISOString(),
     };
     await updateAssignment(newDetails, id);
-    return response.status(200).send("");
+    return response.status(204).send("");
   } catch (error) {
     console.log("db error");
     return response.status(400).send("");
@@ -208,7 +208,7 @@ export const remove = async (request, response) => {
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(204).send(""); //added
+  if (!assignment) return response.status(404).send(""); //added
   if (assignment.user_id !== authenticated) {
     return response.status(403).send("");
   }
@@ -220,7 +220,7 @@ export const remove = async (request, response) => {
   try {
     const id = request.params.id;
     await removeAssignment(id);
-    return response.status(200).send("");
+    return response.status(204).send("");
   } catch (error) {
     console.log("db error");
     return response.status(400).send("");
