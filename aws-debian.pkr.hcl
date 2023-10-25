@@ -110,12 +110,12 @@ variable "date_format" {
 
 variable "provisioner_service_source" {
   type    = string
-  default = "./aws-debian.service"
+  default = null
 }
 
 variable "provisioner_service_destination" {
   type    = string
-  default = "/home/admin/"
+  default = null
 }
 
 source "amazon-ebs" "awsdebian" {
