@@ -24,7 +24,6 @@ jobs:
           sudo mv packer /usr/local/bin/
           packer version
 
-
       - name: Run Packer pulgin installation
         run: packer init .
 
