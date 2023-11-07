@@ -2,7 +2,7 @@ name: Packer AMI
 
 on:
   push:
-    branches: [Test7]  # Replace with the name of your workflow
+    branches: [main]  # Replace with the name of your workflow
 
 jobs:
   connect-remote:
