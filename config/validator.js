@@ -1,15 +1,22 @@
 import bcrypt from "bcrypt";
 import db from "../config/dbSetup.js"
+import logger from "../logger.js"
 
 export const auth = async (email, password) => {
+  try {
     const user = await db.user.findOne({ where: { emailid: email } });
-    console.log("user forbidden", user);
+    logger.info('User found:', user);
+
     if (!user || !bcrypt.compareSync(password, user.password)) {
-        return null;
+      return null;
     } else {
-        return user.id;
+      return user.id;
     }
-}
+  } catch (error) {
+    logger.error('Error during authentication:', error);
+    return null;
+  }
+};
 
 
 export const healthCheckPoint = async () => {
@@ -23,8 +30,11 @@ export const healthCheckPoint = async () => {
 
 export const authUser = async (request, response) => {
     const header = request.headers.authorization;
+    logger.info('Received authentication request with header:', header);
     console.log("header",header);
+
     if (!header || !header.startsWith('Basic ')) {
+      logger.warn('Invalid or missing authentication header');
       return response.status(401).send('');
     }
   
@@ -33,6 +43,7 @@ export const authUser = async (request, response) => {
     const [email, password] = cred.split(':');
   
     const authCheck = await auth(email, password);
+    logger.info('Authentication result:', authCheck);
     console.log("authCheck",authCheck);
     return authCheck;
   };
