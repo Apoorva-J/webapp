@@ -122,7 +122,7 @@ variable "provisioner_config_source" {
   type    = string
   default = null
 }
- 
+
 variable "provisioner_config_destination" {
   type    = string
   default = null
@@ -173,7 +173,7 @@ build {
     destination = "${var.provisioner_service_destination}"
   }
 
-    provisioner "file" {
+  provisioner "file" {
     source      = "${var.provisioner_config_source}"
     destination = "${var.provisioner_config_destination}"
   }
