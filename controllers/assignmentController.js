@@ -8,6 +8,7 @@ import {
 } from "../services/assignment.js";
 import db from "../config/dbSetup.js";
 import { authUser } from "../config/validator.js";
+import logger from "../logger.js"
 
 const health = await healthCheck();
 
@@ -15,6 +16,7 @@ const health = await healthCheck();
 export const post = async (request, response) => {
   try {
     if (health !== true) {
+      logger.error('Health check failed. Unable to create assignment.');
       return response
         .status(503)
         .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -24,6 +26,7 @@ export const post = async (request, response) => {
     const authenticated = await authUser(request, response);
 
     if (authenticated === null) {
+      logger.warn('Authentication failed. Unable to create assignment.');
       return response.status(401).send("");
     }
 
@@ -35,6 +38,7 @@ export const post = async (request, response) => {
     const missingKeys = requiredKeys.filter((key) => !bodyKeys.includes(key));
 
     if (missingKeys.length > 0) {
+      logger.warn('Missing required keys in the payload:', missingKeys.join(", "));
       return response
         .status(400)
         .send("Missing required keys: " + missingKeys.join(", "));
@@ -46,6 +50,7 @@ export const post = async (request, response) => {
     );
 
     if (extraKeys.length > 0) {
+      logger.warn('Invalid keys in the payload:', extraKeys.join(", "));
       return response
         .status(400)
         .send("Invalid keys in the payload: " + extraKeys.join(", "));
@@ -59,19 +64,22 @@ export const post = async (request, response) => {
         assignment_updated: new Date().toISOString(),
       };
       await addAssignment(newDetails);
+      logger.info('Assignment has been successfully created.');
       return response.status(201).send("");
     } catch (error) {
-      console.log("error" + error);
+      logger.error('Error creating assignment:', error);
       return response.status(400).send("");
     }
   } catch {
-    return response.status(400).json({error:"Syntax error"}).send();
+    logger.error('Syntax error in the request');
+    return response.status(400).json({ error: "Syntax error" }).send();
   }
 };
 
 // Get all assignments
 export const getAssignments = async (request, response) => {
   if (health !== true) {
+    logger.error('Health check failed. Unable to retrieve all assignments.');
     return response
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -81,17 +89,22 @@ export const getAssignments = async (request, response) => {
   const authenticated = await authUser(request, response);
 
   if (authenticated === null) {
+    logger.warn('Authentication failed. Unable to retrieve all assignments.');
     return response.status(401).send("");
   }
 
   try {
     const assignments = await getAllAssignments();
 
-    if (request.body && Object.keys(request.body).length > 0)
+    if (request.body && Object.keys(request.body).length > 0) {
+      logger.warn('Invalid request body. Unable to retrieve all assignments.');
       return response.status(400).send();
-    else return response.status(200).send(assignments);
+    } else {
+      logger.info('All assignments have been successfully retrieved.');
+      return response.status(200).send(assignments);
+    }
   } catch (error) {
-    console.log("db error");
+    logger.error('Error retrieving all assignments:', error);
     return response.status(400).send("");
   }
 };
@@ -99,6 +112,7 @@ export const getAssignments = async (request, response) => {
 // Get assignment by Id
 export const getAssignmentUsingId = async (request, response) => {
   if (health !== true) {
+    logger.error('Health check failed. Unable to retrieve assignment by ID.');
     return response
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -107,23 +121,32 @@ export const getAssignmentUsingId = async (request, response) => {
 
   const authenticated = await authUser(request, response);
   if (authenticated === null) {
+    logger.warn('Authentication failed. Unable to retrieve assignment by ID.');
     return response.status(401).send("");
   }
 
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(204).send(""); //check for no assignment status
+  
+  if (!assignment) {
+    logger.warn(`Assignment with ID ${request.params.id} not found. Unable to retrieve assignment by ID.`);
+    return response.status(204).send(""); 
+  }
 
   try {
     const id = request.params.id;
     const assignments = await getAssignmentById(id);
 
-    if (request.body && Object.keys(request.body).length > 0)
+    if (request.body && Object.keys(request.body).length > 0) {
+      logger.warn('Invalid request body. Unable to retrieve assignment by ID.');
       return response.status(400).send();
-    else return response.status(200).send(assignments);
+    } else {
+      logger.info(`Assignment with ID ${id} has been successfully retrieved.`);
+      return response.status(200).send(assignments);
+    }
   } catch (error) {
-    console.log("db error");
+    logger.error('Error retrieving assignment by ID:', error);
     return response.status(400).send("");
   }
 };
@@ -131,6 +154,7 @@ export const getAssignmentUsingId = async (request, response) => {
 // Update assignment
 export const updatedAssignment = async (request, response) => {
   if (health !== true) {
+    logger.error('Health check failed. Unable to update assignment.');
     return response
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -139,14 +163,21 @@ export const updatedAssignment = async (request, response) => {
 
   const authenticated = await authUser(request, response);
   if (authenticated === null) {
+    logger.warn('Authentication failed. Unable to update assignment.');
     return response.status(401).send("");
   }
 
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(404).send("");
+
+  if (!assignment) {
+    logger.warn(`Assignment with ID ${request.params.id} not found. Unable to update assignment.`);
+    return response.status(404).send("");
+  }
+
   if (assignment.user_id !== authenticated) {
+    logger.warn(`Permission denied. User ${authenticated} does not have access to update assignment with ID ${request.params.id}.`);
     return response.status(403).send("");
   }
 
@@ -160,6 +191,7 @@ export const updatedAssignment = async (request, response) => {
   const missingKeys = requiredKeys.filter((key) => !bodyKeys.includes(key));
 
   if (missingKeys.length > 0) {
+    logger.warn('Missing required keys in the payload:', missingKeys.join(", "));
     return response
       .status(400)
       .send("Missing required keys: " + missingKeys.join(", "));
@@ -171,6 +203,7 @@ export const updatedAssignment = async (request, response) => {
   );
 
   if (extraKeys.length > 0) {
+    logger.warn('Invalid keys in the payload:', extraKeys.join(", "));
     return response
       .status(400)
       .send("Invalid keys in the payload: " + extraKeys.join(", "));
@@ -183,8 +216,10 @@ export const updatedAssignment = async (request, response) => {
       assignment_updated: new Date().toISOString(),
     };
     await updateAssignment(newDetails, id);
+    logger.info(`Assignment with ID ${id} has been successfully updated.`);
     return response.status(204).send("");
   } catch (error) {
+    logger.error('Error updating assignment:', error);
     console.log("db error");
     return response.status(400).send("");
   }
@@ -193,6 +228,7 @@ export const updatedAssignment = async (request, response) => {
 // Remove assignment
 export const remove = async (request, response) => {
   if (health !== true) {
+    logger.error('Health check failed. Unable to remove assignment.');
     return response
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -202,26 +238,36 @@ export const remove = async (request, response) => {
   const authenticated = await authUser(request, response);
 
   if (authenticated === null) {
+    logger.warn('Authentication failed. Unable to remove assignment.');
     return response.status(401).send("");
   }
 
   const assignment = await db.assignment.findOne({
     where: { id: request.params.id },
   });
-  if (!assignment) return response.status(404).send(""); //added
+
+  if (!assignment) {
+    logger.warn(`Assignment with ID ${request.params.id} not found. Unable to remove assignment.`);
+    return response.status(404).send("");
+  }
+
   if (assignment.user_id !== authenticated) {
+    logger.warn(`Permission denied. User ${authenticated} does not have access to remove assignment with ID ${request.params.id}.`);
     return response.status(403).send("");
   }
 
   if (request.body && Object.keys(request.body).length > 0) {
+    logger.warn('Invalid request body. Unable to remove assignment.');
     return response.status(400).send("");
   }
 
   try {
     const id = request.params.id;
     await removeAssignment(id);
+    logger.info(`Assignment with ID ${id} has been successfully removed.`);
     return response.status(204).send("");
   } catch (error) {
+    logger.error('Error removing assignment:', error);
     console.log("db error");
     return response.status(400).send("");
   }
@@ -241,11 +287,20 @@ export const healthz = async (request, response) => {
     const health = await healthCheck();
     const status = health ? 200 : 503;
 
+      // Log health check status
+      if (health) {
+        logger.info('Health check succeeded');
+      } else {
+        logger.error('Health check failed');
+      }
+
     return response
       .status(status)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
       .send("");
   } catch (error) {
+    logger.error('Error during health check:', error);
+
     return response
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")

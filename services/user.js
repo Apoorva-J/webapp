@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import db from "../config/dbSetup.js"
+import logger from "../logger.js";
 
 const currentDate = new Date();
 const accountCreatedString = currentDate.toISOString();
@@ -9,6 +10,7 @@ const accountUpdatedString = currentDate.toISOString();
 const getDataFromCsv=async () => {
     try {
         await db.sequelize.sync({ alter: true });
+        logger.info('Database synced successfully.');
         const csvData = fs.readFileSync(path.join('/opt/csye6225/users.csv'), 'utf-8');
         const rows = csvData.split('\n').map((row) => row.split(','));
 
@@ -24,8 +26,10 @@ const getDataFromCsv=async () => {
             });
         }
 
+        logger.info('Database bootstrapped successfully.');
         console.log('Database bootstrapped successfully.');
     } catch (error) {
+        logger.error('Error bootstrapping the database:', error);
         console.log('Error bootstrapping the databases:');
     }
 }
