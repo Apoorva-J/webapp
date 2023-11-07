@@ -22,3 +22,4 @@ ami_region                                         = ["us-east-1"]
 date_format                                        = "YYYY_MM_DD_hh_mm_ss"
 provisioner_config_source                          = "cloudwatchConfig.json"
 provisioner_config_destination                     = "/home/admin/cloudwatchConfig.json"
+
