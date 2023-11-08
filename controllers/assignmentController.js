@@ -53,6 +53,10 @@ export const post = async (request, response) => {
         .send("Missing required keys: " + missingKeys.join(", "));
     }
 
+
+  
+
+
     // Check if there are any additional keys in the payload
     const extraKeys = bodyKeys.filter(
       (key) => !requiredKeys.includes(key) && !optionalKeys.includes(key)
@@ -64,6 +68,29 @@ export const post = async (request, response) => {
         .status(400)
         .send("Invalid keys in the payload: " + extraKeys.join(", "));
     }
+
+      // Check if 'points' is an integer
+  if (!Number.isInteger(request.body.points)) {
+    return response.status(400).json({
+      message: "Points must be an integer.",
+    });
+  }
+ 
+  // Check if 'num_of_attempts' is an integer
+  if (!Number.isInteger(request.body.num_of_attempts)) {
+    return response.status(400).json({
+      message: "Number_of_attempts must be an integer.",
+    });
+  }
+ 
+  // Check if 'deadline' is a valid date
+  const deadlineDate = new Date(request.body.deadline);
+  if (isNaN(deadlineDate.getTime())) {
+    return response.status(400).json({
+      message: "Deadline must be an valid date.",
+    });
+  }
+
 
     try {
       const newDetails = {
@@ -235,6 +262,28 @@ export const updatedAssignment = async (request, response) => {
       .status(400)
       .send("Invalid keys in the payload: " + extraKeys.join(", "));
   }
+
+    // Check if 'points' is an integer
+    if (!Number.isInteger(request.body.points)) {
+      return response.status(400).json({
+        message: "Points must be an integer.",
+      });
+    }
+   
+    // Check if 'num_of_attempts' is an integer
+    if (!Number.isInteger(request.body.num_of_attempts)) {
+      return response.status(400).json({
+        message: "Number_of_attempts must be an integer.",
+      });
+    }
+   
+    // Check if 'deadline' is a valid date
+    const deadlineDate = new Date(request.body.deadline);
+    if (isNaN(deadlineDate.getTime())) {
+      return response.status(400).json({
+        message: "Deadline must be an valid date.",
+      });
+    }
 
   try {
     const id = request.params.id;
