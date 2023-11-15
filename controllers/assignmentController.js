@@ -176,7 +176,7 @@ export const getAssignmentUsingId = async (request, response) => {
     logger.warn(
       `Assignment with ID ${request.params.id} not found. Unable to retrieve assignment by ID.`
     );
-    return response.status(204).send("");
+    return response.status(404).send("");
   }
 
   try {
