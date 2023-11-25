@@ -445,29 +445,30 @@ export const postSubmission = async (request, response) => {
     submission.attempts += 1;
     await assignment.save();//check!!!!
 
-    // Construct the message to be sent to the SNS topic
-    const snsMessage = {
-      id: assignment.id,
-      assignment_id: assignment.assignment_id,
-      submission_url: request.body.submission_url,
-      submission_date: new Date().toISOString(),
-      assignment_updated: new Date().toISOString(),
-      user_info: {
-        email: authenticated, // authenticated is the user's email
-      },
-    };
+    // // Construct the message to be sent to the SNS topic
+    // const snsMessage = {
+    //   id: assignment.id,
+    //   assignment_id: assignment.assignment_id,
+    //   submission_url: request.body.submission_url,
+    //   submission_date: new Date().toISOString(),
+    //   assignment_updated: new Date().toISOString(),
+    //   user_info: {
+    //     email: authenticated, // authenticated is the user's email
+    //   },
+    // };
 
-    // Publish the message to the SNS topic
-    await sns
-      .publish({
-        TopicArn: "YOUR_SNS_TOPIC_ARN",
-        Message: JSON.stringify(snsMessage),
-      })
-      .promise();
+    // // Publish the message to the SNS topic
+    // await sns
+    //   .publish({
+    //     TopicArn: "YOUR_SNS_TOPIC_ARN",
+    //     Message: JSON.stringify(snsMessage),
+    //   })
+    //   .promise();
 
     logger.info("Submission has been successfully accepted.");
     return response.status(201).send("");
-  } catch (error) {
+  } 
+  catch (error) {
     logger.error("Error processing submission:", error);
     return response.status(400).send("");
   }
