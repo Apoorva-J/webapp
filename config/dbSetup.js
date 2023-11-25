@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize';
 import config from '../config/dbConfig.js';
 import assignmentModel from "../models/assignmentModel.js";
 import userModel from "../models/userModel.js";
+import submissionModel from '../models/submissionModel.js';
 
 // const sequelize = new Sequelize({
 //   dialect: config.database.dialect,
@@ -18,7 +19,8 @@ const sequelize = new Sequelize(
 const db = {
   sequelize,
   assignment: assignmentModel(sequelize),
-  user: userModel(sequelize)
+  user: userModel(sequelize),
+  submission: submissionModel(sequelize)
 };
 
 export default db;

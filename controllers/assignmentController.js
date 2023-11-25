@@ -11,6 +11,13 @@ import { authUser } from "../config/validator.js";
 import logger from "../logger.js";
 import StatsD from "node-statsd";
 
+// // Import AWS SDK for SNS
+// import AWS from "aws-sdk";
+
+// // Create an SNS client
+// const sns = new AWS.SNS();
+
+
 const statsd = new StatsD({ host: "localhost", port: 8125 });
 
 const health = await healthCheck();
@@ -362,6 +369,110 @@ export const remove = async (request, response) => {
     return response.status(400).send("");
   }
 };
+
+
+//Post Submissions
+export const postSubmission = async (request, response) => {
+  try {
+    if (health !== true) {
+      logger.error("Health check failed. Unable to create assignment.");
+      return response
+        .status(503)
+        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+        .send("");
+    }
+
+    const authenticated = await authUser(request, response);
+
+    if (authenticated === null) {
+      logger.warn("Authentication failed. Unable to create assignment.");
+      return response.status(401).send("");
+    }
+
+    // Increment custom metric for post API calls
+    statsd.increment("api.postSubmission.calls");
+
+    // Check if submission_url is present in the payload
+    if (!request.body.submission_url) {
+      return response.status(400).json({
+        message: "Submission URL is required.",
+      });
+    }
+
+    // Validate the submission URL format (you may want to enhance this validation)
+    const submissionUrlRegex = /^https:\/\/github\.com\/.*\.zip$/;
+    if (!submissionUrlRegex.test(request.body.submission_url)) {
+      return response.status(400).json({
+        message: "Invalid submission URL format.",
+      });
+    }
+
+    // Retrieve assignment details
+    const assignment = await db.assignment.findOne({
+      where: { id: request.params.assignment_id, user_id: request.params.user_id},
+    });
+
+
+    const submission = await db.submission.findOne({
+      where: { id: request.params.id },
+    });
+
+    if (!assignment) {
+      logger.warn(`Assignment with ID ${request.params.id} not found.`);
+      return response.status(404).send("");
+    }
+
+    // Check if the user has exceeded the maximum number of attempts (retries)
+    if (assignment.num_of_attempts < submission.attempts) {
+      logger.warn(`User has exceeded the maximum number of attempts.`);
+      return response.status(400).json({
+        message: "Exceeded maximum number of attempts.",
+      });
+    }
+
+    // Check if the due date has passed
+    const currentDateTime = new Date();
+    const deadlineDateTime = new Date(assignment.deadline);
+
+    if (currentDateTime > deadlineDateTime) {
+      logger.warn(`Submission deadline has passed.`);
+      return response.status(400).json({
+        message: "Submission deadline has passed.",
+      });
+    }
+
+    // Increment the attempts count
+    submission.attempts += 1;
+    await assignment.save();//check!!!!
+
+    // Construct the message to be sent to the SNS topic
+    const snsMessage = {
+      id: assignment.id,
+      assignment_id: assignment.assignment_id,
+      submission_url: request.body.submission_url,
+      submission_date: new Date().toISOString(),
+      assignment_updated: new Date().toISOString(),
+      user_info: {
+        email: authenticated, // authenticated is the user's email
+      },
+    };
+
+    // Publish the message to the SNS topic
+    await sns
+      .publish({
+        TopicArn: "YOUR_SNS_TOPIC_ARN",
+        Message: JSON.stringify(snsMessage),
+      })
+      .promise();
+
+    logger.info("Submission has been successfully accepted.");
+    return response.status(201).send("");
+  } catch (error) {
+    logger.error("Error processing submission:", error);
+    return response.status(400).send("");
+  }
+};
+
 
 // Health check for assignment
 export const healthz = async (request, response) => {
