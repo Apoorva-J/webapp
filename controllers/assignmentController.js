@@ -5,6 +5,8 @@ import {
   getAssignmentById,
   updateAssignment,
   healthCheck,
+  getSubmissionById,
+  addSubmission,
 } from "../services/assignment.js";
 import db from "../config/dbSetup.js";
 import { authUser } from "../config/validator.js";
@@ -98,13 +100,13 @@ export const post = async (request, response) => {
     }
 
     try {
-      const newDetails = {
+      const newSubmissionDetails = {
         ...request.body,
         user_id: authenticated,
         assignment_created: new Date().toISOString(),
         assignment_updated: new Date().toISOString(),
       };
-      await addAssignment(newDetails);
+      await addAssignment(newSubmissionDetails);
       logger.info("Assignment has been successfully created.");
       return response.status(201).send("");
     } catch (error) {
@@ -298,11 +300,11 @@ export const updatedAssignment = async (request, response) => {
 
   try {
     const id = request.params.id;
-    const newDetails = {
+    const newSubmissionDetails = {
       ...request.body,
       assignment_updated: new Date().toISOString(),
     };
-    await updateAssignment(newDetails, id);
+    await updateAssignment(newSubmissionDetails, id);
     logger.info(`Assignment with ID ${id} has been successfully updated.`);
     return response.status(204).send("");
   } catch (error) {
@@ -357,7 +359,9 @@ export const remove = async (request, response) => {
 
   try {
     const id = request.params.id;
-    await removeAssignment(id);
+    const submissions = await getSubmissionById(authenticated, id);
+    if (submissions) return response.status(400).send("");
+    else await removeAssignment(id);
     logger.info(`Assignment with ID ${id} has been successfully removed.`);
     return response.status(204).send("");
   } catch (error) {
@@ -369,181 +373,113 @@ export const remove = async (request, response) => {
 
 //Post Submissions
 export const postSubmission = async (req, res) => {
+  if (health !== true) {
+    logger.error("Health check failed. Unable to create assignment.");
+    return response
+      .status(503)
+      .header("Cache-Control", "no-cache, no-store, must-revalidate")
+      .send("");
+  }
+  const authenticated = await authUser(request, response);
+
+  if (authenticated === null) {
+    logger.warn("Authentication failed. Unable to create assignment.");
+    return response.status(401).send("");
+  }
+  //Increment custom metric for post API calls
+  statsd.increment("api.postSubmission.calls");
+  logger.info(`Received ${req.method} request to add submission`);
+
+  // if (
+  //   Object.entries(req.body).length === 0 ||
+  //   Object.keys(req.body).length === 0 ||
+  //   JSON.stringify(req.body) === "{}"
+  // ) {
+  //   logger.warn("Bad request: Request body is empty.");
+  //   return res.status(400).send({ message: "Bad Request" });
+  // }
+  //----------------------------------------------------------------------//
+
+  // const userData = await db.submission.findOne({ where: { id: authenticated } });
+  //     if (userData.length > 0) {
+  //         return response.status(400).send('');
+  //     }
+
+  //     if (!validator.isURL(newSubmissionDetails.submission_url)) {
+  //       logger.warn("Submission API Invalid URL.");
+  //       return response.status(400).send("Invalid submission URL.");
+  //   }
+
+  const bodyKeys = Object.keys(request.body);
+  const requiredKeys = ["submission_url"];
+
+  // Check if all required keys are present
+  if (!requiredKeys.every((key) => bodyKeys.includes(key))) {
+    logger.warn("Submission API Invalid body, parameters missing.");
+    return response.status(400).send("Missing required keys");
+  }
+
+  // Check if there are any additional keys in the payload
+  if (bodyKeys.some((key) => !requiredKeys.includes(key))) {
+    logger.warn("Submission API Invalid body, parameters error.");
+    return response.status(400).send("Invalid keys in the payload");
+  }
+
+  const currentDate = new Date();
+
+  if (currentDate > assignment.deadline) {
+    logger.warn("Submission API submission done after deadline");
+    return response.status(400).send("");
+  }
+
+  let assignmentId = req.params.id;
+  let assignment = await db.assignment.findOne({
+    where: { id: assignmentId },
+  });
+
+  const user_id = await db.user.findOne({ where: { id: authenticated } });
+
   try {
-    if (health !== true) {
-      logger.error("Health check failed. Unable to create assignment.");
-      return response
-        .status(503)
-        .header("Cache-Control", "no-cache, no-store, must-revalidate")
-        .send("");
-    }
-    const authenticated = await authUser(request, response);
+    const id = request.params.id;
+    let newSubmissionDetails = request.body;
+    newSubmissionDetails.user_id = authenticated;
+    newSubmissionDetails.submission_date = new Date().toISOString();
+    newSubmissionDetails.assignment_updated = new Date().toISOString();
+    newSubmissionDetails.assignment_id = id;
 
-    if (authenticated === null) {
-      logger.warn("Authentication failed. Unable to create assignment.");
-      return response.status(401).send("");
-    }
-    //Increment custom metric for post API calls
-    statsd.increment("api.postSubmission.calls");
-    // statsdClient.increment("api_call_post_submission");
-    logger.info(`Received ${req.method} request to add submission`);
-    let assignmentId = req.params.id;
-    const userId = req.user.id;
-    const user = await db.user.findByPk(userId);
+    const submissions = await getSubmissionById(authenticated, id);
 
-    if (
-      Object.entries(req.body).length === 0 ||
-      Object.keys(req.body).length === 0 ||
-      JSON.stringify(req.body) === "{}"
-    ) {
-      logger.warn("Bad request: Request body is empty.");
-      return res.status(400).send({ message: "Bad Request" });
-    }
-
-    let assignment = await db.assignment.findOne({
-      where: { id: assignmentId },
-    });
-    // console.log("assi", assignment);
-    if (!assignment) {
-      logger.info(`No assignment found with id: ${id}`);
-      return res.status(404).send({ message: "Assignment not found" });
-    }
-
-    const { submission_url } = req.body;
-
-    //console.log(points);
-
-    if (submission_url == undefined) {
-      logger.warn("Submission URL is not provided.");
-      return res
-        .status(400)
-        .send({ message: "Submission URL is not provided." });
-    }
-
-    if (!user) {
-      logger.warn("User not found.");
-      return res.status(404).send("User not found");
-    }
-
-    const currentDateTime = new Date();
-    const assignmentDeadline = new Date(assignment.deadline);
-
-    if (currentDateTime > assignmentDeadline) {
-      logger.warn("Submission deadline has passed.");
-      return res
-        .status(400)
-        .send({ message: "Submission deadline has passed." });
-    }
-
-    const maxAttempts = assignment.num_of_attempts;
-
-    const submissionExists = await Submissions.count({
-      where: {
-        assignmentId,
-        userId,
-      },
-    });
-
-    if (submissionExists) {
-      let submission = await db.submission.findOne({
-        where: {
-          assignmentId,
-          userId,
-        },
-      });
-
-      const existingSubmissionsCount = submission.attempts;
-
-      if (existingSubmissionsCount >= maxAttempts) {
-        logger.warn("Exceeded the maximum number of submission attempts.");
-        return res.status(403).send({
-          message: "Exceeded the maximum number of submission attempts.",
-        });
-      }
-
-      // let submission_info = {
-      //     submission_url: req.body.submission_url
-      // };
-
-      //const submission_url = req.body.submission_url;
-
-      const updatedFields = {};
-      if (submission_url !== undefined)
-        updatedFields.submission_url = submission_url;
-
-      updatedFields.submission_updated =
-        db.sequelize.literal("CURRENT_TIMESTAMP");
-      updatedFields.attempts = submission.attempts + 1;
-
-      let result = await submission.update(updatedFields, {
-        where: {
-          assignmentId,
-          userId,
-        },
-      });
-
-      if (result[0] === 0) {
-        logger.info(`Submission not found or not updated`);
-        return res.status(404).send({ message: "Submission not found" });
-      }
-
-      let submissionNew = await db.submission.findOne({
-        where: {
-          assignmentId,
-          userId,
-        },
-      });
-
-      const snsParams = {
-        TopicArn: snsTopicArn,
-        Message: JSON.stringify({
-          submission_url: submission.submission_url,
-          user_email: user.email,
-        }),
-      };
-
-      sns.publish(snsParams, (err, data) => {
-        if (err) {
-          console.error("Error publishing to SNS:", err);
-        } else {
-          console.log("Successfully published to SNS:", data);
-        }
-      });
-
-      logger.info(`Submission updated successfully`);
-      res.status(201).send(submissionNew);
-
-      // const submission = await Submissions.create(submission_info);
-      // logger.info(`Submission created successfully: ${submission.id}`);
-      // res.status(201).send(submission);
+    if (submissions.length >= assignment.num_of_attempts) {
+      logger.warn("Submission API num of attempts exceeded");
+      return response.status(403).send("");
     } else {
-      let submissionInfo = {
-        submission_url: submission_url,
-        attempts: 1,
-        userId: userId,
-        assignmentId: assignmentId,
+      const submissionDetails = await addSubmission(newSubmissionDetails);
+      logger.info("Submission successfull.");
+      AWS.config.update({ region: "us-east-1" });
+      const sns = new AWS.SNS();
+      const userInfo = {
+        email: user_id.emailid,
       };
-
-      const submission = await Submissions.create(submissionInfo);
-
-      const snsParams = {
-        TopicArn: snsTopicArn,
-        Message: JSON.stringify({
-          submission_url: submission_url,
-          user_email: user.email,
-        }),
+      const url = newSubmissionDetails.submission_url;
+      const message = {
+        userInfo,
+        url,
       };
-
-      sns.publish(snsParams, (err, data) => {
-        if (err) {
-          console.error("Error publishing to SNS:", err);
-        } else {
-          console.log("Successfully published to SNS:", data);
+      sns.publish(
+        {
+          TopicArn: config.database.TopicArn,
+          Message: JSON.stringify(message),
+        },
+        (err, data) => {
+          if (err) {
+            logger.error("Error publishing to SNS:", err);
+            return response.status(500).send("Error submitting.", err);
+          } else {
+            logger.info("Submission successful:", data);
+            return response.status(200).send("Submission successful.");
+          }
         }
-      });
-
-      logger.info(`Submission created successfully: ${submission.id}`);
-      res.status(201).send(submission);
+      );
     }
   } catch (error) {
     console.error(error);
