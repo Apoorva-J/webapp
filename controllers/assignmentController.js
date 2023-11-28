@@ -353,7 +353,7 @@ export const remove = async (request, response) => {
   }
 
   if (request.body && Object.keys(request.body).length > 0) {
-    logger.warn("Invalid request body. Unable to remove assignment.");
+    console.log("Invalid request body. Unable to remove assignment.");
     return response.status(400).send("");
   }
 
@@ -375,29 +375,21 @@ export const remove = async (request, response) => {
 export const postSubmission = async (req, res) => {
   if (health !== true) {
     logger.error("Health check failed. Unable to create assignment.");
-    return response
+    return res
       .status(503)
       .header("Cache-Control", "no-cache, no-store, must-revalidate")
       .send("");
   }
-  const authenticated = await authUser(request, response);
+  const authenticated = await authUser(req, res);
 
   if (authenticated === null) {
     logger.warn("Authentication failed. Unable to create assignment.");
-    return response.status(401).send("");
+    return res.status(401).send("");
   }
   //Increment custom metric for post API calls
   statsd.increment("api.postSubmission.calls");
   logger.info(`Received ${req.method} request to add submission`);
 
-  // if (
-  //   Object.entries(req.body).length === 0 ||
-  //   Object.keys(req.body).length === 0 ||
-  //   JSON.stringify(req.body) === "{}"
-  // ) {
-  //   logger.warn("Bad request: Request body is empty.");
-  //   return res.status(400).send({ message: "Bad Request" });
-  // }
   //----------------------------------------------------------------------//
 
   // const userData = await db.submission.findOne({ where: { id: authenticated } });
@@ -405,43 +397,52 @@ export const postSubmission = async (req, res) => {
   //         return response.status(400).send('');
   //     }
 
-  //     if (!validator.isURL(newSubmissionDetails.submission_url)) {
-  //       logger.warn("Submission API Invalid URL.");
-  //       return response.status(400).send("Invalid submission URL.");
-  //   }
 
-  const bodyKeys = Object.keys(request.body);
-  const requiredKeys = ["submission_url"];
+  const bodyKeys = Object.keys(req.body);
 
+  const requiredKeys = [
+      "submission_url",
+  ];
+  console.log("bodyKey ", bodyKeys[0]);
+  console.log("requiredKeys ", requiredKeys[0]);
   // Check if all required keys are present
-  if (!requiredKeys.every((key) => bodyKeys.includes(key))) {
-    logger.warn("Submission API Invalid body, parameters missing.");
-    return response.status(400).send("Missing required keys");
+
+  if (bodyKeys.length !=1) {
+      logger.warn("Submission API Invalid body, parameters missing.");
+      return res.status(400).send("Extra parameters ");
   }
 
-  // Check if there are any additional keys in the payload
-  if (bodyKeys.some((key) => !requiredKeys.includes(key))) {
+  if(bodyKeys[0]!=requiredKeys[0])
+  {
     logger.warn("Submission API Invalid body, parameters error.");
-    return response.status(400).send("Invalid keys in the payload");
+      return res.status(400).send("Invalid keys in the payload: " );
   }
+
 
   const currentDate = new Date();
-
-  if (currentDate > assignment.deadline) {
-    logger.warn("Submission API submission done after deadline");
-    return response.status(400).send("");
-  }
-
   let assignmentId = req.params.id;
   let assignment = await db.assignment.findOne({
     where: { id: assignmentId },
   });
 
+  console.log("CURRENT date", currentDate);
+  console.log("assignment.", assignment);
+  console.log("assignment.deadline", assignment.deadline);
+
+
+  if (currentDate > assignment.deadline) {
+    logger.warn("Submission API submission done after deadline");
+    console.log("Submission API submission done after deadline");
+    return res.status(400).send("");
+  }
+
+ 
   const user_id = await db.user.findOne({ where: { id: authenticated } });
+  
 
   try {
-    const id = request.params.id;
-    let newSubmissionDetails = request.body;
+    const id = req.params.id;
+    let newSubmissionDetails = req.body;
     newSubmissionDetails.user_id = authenticated;
     newSubmissionDetails.submission_date = new Date().toISOString();
     newSubmissionDetails.assignment_updated = new Date().toISOString();
@@ -451,7 +452,7 @@ export const postSubmission = async (req, res) => {
 
     if (submissions.length >= assignment.num_of_attempts) {
       logger.warn("Submission API num of attempts exceeded");
-      return response.status(403).send("");
+      return res.status(403).send("");
     } else {
       const submissionDetails = await addSubmission(newSubmissionDetails);
       logger.info("Submission successfull.");
@@ -475,8 +476,8 @@ export const postSubmission = async (req, res) => {
             logger.error("Error publishing to SNS:", err);
             return response.status(500).send("Error submitting.", err);
           } else {
-            logger.info("Submission successful:", data);
-            return response.status(200).send("Submission successful.");
+            logger.info("Submission successful:");
+            return res.status(200).send("Submission successful.");
           }
         }
       );
