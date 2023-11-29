@@ -441,9 +441,6 @@ export const postSubmission = async (req, res) => {
   
 
   try {
-
-    
-
     const id = req.params.id;
     let newSubmissionDetails = req.body;
     newSubmissionDetails.user_id = authenticated;
