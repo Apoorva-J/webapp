@@ -1,28 +1,28 @@
-# name: Packer fmt
+name: Packer fmt
 
-# on:
-#   pull_request:
-#     branches:
-#       [main]  # adjust to your main branch name
+on:
+  pull_request:
+    branches:
+      [main]  # adjust to your main branch name
 
-# jobs:
-#   connect-remote:
-#     runs-on: ubuntu-latest
+jobs:
+  connect-remote:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v2
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-#       - name: Install Packer
-#         run: |
-#           wget https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip
-#           unzip packer_1.7.2_linux_amd64.zip
-#           chmod +x packer
-#           sudo mv packer /usr/local/bin/
-#           packer version
+      - name: Install Packer
+        run: |
+          wget https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip
+          unzip packer_1.7.2_linux_amd64.zip
+          chmod +x packer
+          sudo mv packer /usr/local/bin/
+          packer version
 
-#       - name: Run Packer pulgin installation
-#         run: packer init .
+      - name: Run Packer pulgin installation
+        run: packer init .
 
-#       - name: Run Packer fmt
-#         run: packer fmt -check .
+      - name: Run Packer fmt
+        run: packer fmt -check .
