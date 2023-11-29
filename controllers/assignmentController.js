@@ -32,7 +32,6 @@ export const post = async (request, response) => {
         .header("Cache-Control", "no-cache, no-store, must-revalidate")
         .send("");
     }
-
     const authenticated = await authUser(request, response);
 
     if (authenticated === null) {
@@ -464,11 +463,13 @@ export const postSubmission = async (req, res) => {
       const userInfo = {
         email: user_id.emailid,
       };
+      
+      const assignmentId=newSubmissionDetails.assignment_id;
       const attemptsCount=newSubmissionDetails.attempts;
       const url = newSubmissionDetails.submission_url;
       const message = {
         userInfo,
-        id,
+        assignmentId,
         email,
         url,
         attemptsCount
