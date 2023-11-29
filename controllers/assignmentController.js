@@ -442,8 +442,8 @@ export const postSubmission = async (req, res) => {
   
 
   try {
-    const id = request.params.id;
-    let newSubmissionDetails = request.body;
+    const id = req.params.id;
+    let newSubmissionDetails = req.body;
     newSubmissionDetails.user_id = authenticated;
     newSubmissionDetails.submission_date = new Date().toISOString();
     newSubmissionDetails.assignment_updated = new Date().toISOString();
