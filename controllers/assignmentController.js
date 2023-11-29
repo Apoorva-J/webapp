@@ -9,7 +9,7 @@ import {
   addSubmission,
 } from "../services/assignment.js";
 import db from "../config/dbSetup.js";
-import { authUser } from "../config/validator.js";
+import { authUser, useRegex } from "../config/validator.js";
 import logger from "../logger.js";
 import StatsD from "node-statsd";
 import AWS from "aws-sdk";
@@ -93,12 +93,16 @@ export const post = async (request, response) => {
     }
 
     // Check if 'deadline' is a valid date
-    const deadlineDate = new Date(request.body.deadline);
-    if (isNaN(deadlineDate.getTime())) {
-      return response.status(400).json({
-        message: "Deadline must be an valid date.",
-      });
-    }
+    // const deadlineDate = new Date(request.body.deadline);
+    // if (isNaN(deadlineDate.getTime())) {
+    //   return response.status(400).json({
+    //     message: "Deadline must be an valid date.",
+    //   });
+    // }
+    if (!useRegex(request.body.deadline)) {
+      logger.warn("Bad request: Invalid body parameter deadline in post API");
+      return response.status(400).send();
+  }
 
     try {
       const newSubmissionDetails = {
@@ -292,12 +296,17 @@ export const updatedAssignment = async (request, response) => {
   }
 
   // Check if 'deadline' is a valid date
-  const deadlineDate = new Date(request.body.deadline);
-  if (isNaN(deadlineDate.getTime())) {
-    return response.status(400).json({
-      message: "Deadline must be an valid date.",
-    });
-  }
+  // const deadlineDate = new Date(request.body.deadline);
+  // if (isNaN(deadlineDate.getTime())) {
+  //   return response.status(400).json({
+  //     message: "Deadline must be an valid date.",
+  //   });
+  // }
+
+  if (!useRegex(request.body.deadline)) {
+    logger.warn("Bad request: Invalid body parameter deadline in post API");
+    return response.status(400).send();
+}
 
   try {
     const id = request.params.id;
@@ -390,14 +399,6 @@ export const postSubmission = async (req, res) => {
   //Increment custom metric for post API calls
   statsd.increment("api.postSubmission.calls");
   logger.info(`Received ${req.method} request to add submission`);
-
-  //----------------------------------------------------------------------//
-
-  // const userData = await db.submission.findOne({ where: { id: authenticated } });
-  //     if (userData.length > 0) {
-  //         return response.status(400).send('');
-  //     }
-
 
   const bodyKeys = Object.keys(req.body);
 
@@ -494,53 +495,6 @@ export const postSubmission = async (req, res) => {
         }
       );
     }
-  //   const id = req.params.id;
-  //   let newSubmissionDetails = req.body;
-  //   newSubmissionDetails.user_id = authenticated;
-  //   newSubmissionDetails.submission_date = new Date().toISOString();
-  //   newSubmissionDetails.assignment_updated = new Date().toISOString();
-  //   newSubmissionDetails.assignment_id = id;
-  //   newSubmissionDetails.attempts = submissions.length+1;
-  //   const submissions = await getSubmissionById(authenticated, id);
-    
-  //   if (submissions.length >= assignment.num_of_attempts) {
-  //     logger.warn("Submission API num of attempts exceeded");
-  //     return res.status(403).send("");
-  //   } else {
-  //     const submissionDetails = await addSubmission(newSubmissionDetails);
-  //     logger.info("Submission successfull.");
-  //     AWS.config.update({ region: "us-east-1" });
-  //     const sns = new AWS.SNS();
-  //     const userInfo = {
-  //       email: user_id.emailid,
-  //     };
-      
-  //     const assignmentId=newSubmissionDetails.assignment_id;
-  //     const attemptsCount=newSubmissionDetails.attempts;
-  //     const url = newSubmissionDetails.submission_url;
-  //     const message = {
-  //       userInfo,
-  //       assignmentId,
-  //       email,
-  //       url,
-  //       attemptsCount
-  //     };
-  //     sns.publish(
-  //       {
-  //         TopicArn: config.database.TopicArn,
-  //         Message: JSON.stringify(message),
-  //       },
-  //       (err, data) => {
-  //         if (err) {
-  //           logger.error("Error publishing to SNS:", err);
-  //           return response.status(500).send("Error submitting.", err);
-  //         } else {
-  //           logger.info("Submission successful:");
-  //           return res.status(200).send("Submission successful.");
-  //         }
-  //       }
-  //     );
-  //   }
   } catch (error) {
     console.error(error);
     logger.error(

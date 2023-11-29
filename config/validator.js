@@ -18,6 +18,11 @@ export const auth = async (email, password) => {
   }
 };
 
+export const useRegex=(input)=> {
+  let regexDeadline = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([Zz])$/;
+  return regexDeadline.test(input);
+}
+
 
 export const healthCheckPoint = async () => {
     try {
