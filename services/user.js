@@ -11,7 +11,7 @@ const getDataFromCsv=async () => {
     try {
         await db.sequelize.sync({ alter: true });
         logger.info('Database synced successfully.');
-        const csvData = fs.readFileSync(path.join('/opt/csye6225/users.csv'), 'utf-8');
+        const csvData = fs.readFileSync(path.join('C:/Users/apoor/Desktop/cc9/webapp/users.csv'), 'utf-8');
         const rows = csvData.split('\n').map((row) => row.split(','));
 
         for (let i = 1; i < rows.length; i++) {

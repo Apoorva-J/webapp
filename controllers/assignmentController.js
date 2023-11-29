@@ -13,6 +13,8 @@ import { authUser } from "../config/validator.js";
 import logger from "../logger.js";
 import StatsD from "node-statsd";
 import AWS from "aws-sdk";
+import env from 'dotenv';
+env.config();
 
 const sns = new AWS.SNS();
 const snsTopicArn = process.env.SNS_TOPIC_ARN;
@@ -468,7 +470,7 @@ export const postSubmission = async (req, res) => {
       };
       sns.publish(
         {
-          TopicArn: config.database.TopicArn,
+          TopicArn: snsTopicArn,
           Message: JSON.stringify(message),
         },
         (err, data) => {
