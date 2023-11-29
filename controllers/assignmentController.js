@@ -441,9 +441,6 @@ export const postSubmission = async (req, res) => {
   
 
   try {
-
-    const submissions = await getSubmissionById(authenticated, id);
-
     const id = req.params.id;
     let newSubmissionDetails = req.body;
     newSubmissionDetails.user_id = authenticated;
@@ -451,6 +448,7 @@ export const postSubmission = async (req, res) => {
     newSubmissionDetails.assignment_updated = new Date().toISOString();
     newSubmissionDetails.assignment_id = id;
     newSubmissionDetails.attempts = submissions.length+1;
+    const submissions = await getSubmissionById(authenticated, id);
     
     if (submissions.length >= assignment.num_of_attempts) {
       logger.warn("Submission API num of attempts exceeded");
