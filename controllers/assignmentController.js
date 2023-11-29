@@ -464,11 +464,12 @@ export const postSubmission = async (req, res) => {
       const userInfo = {
         email: user_id.emailid,
       };
+      const assignmentId=newSubmissionDetails.assignment_id;
       const attemptsCount=newSubmissionDetails.attempts;
       const url = newSubmissionDetails.submission_url;
       const message = {
         userInfo,
-        id,
+        assignmentId,
         email,
         url,
         attemptsCount
