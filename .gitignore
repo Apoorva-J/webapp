@@ -132,5 +132,6 @@ dist
 # zip file
 .webapp.zip
 
+.users.csv
 
 package-lock.json
