@@ -14,6 +14,7 @@ import logger from "../logger.js";
 import StatsD from "node-statsd";
 import AWS from "aws-sdk";
 import config from "../config/dbConfig.js";
+import validator from 'validator';
 
 const sns = new AWS.SNS();
 const snsTopicArn = process.env.SNS_TOPIC_ARN;
@@ -360,7 +361,7 @@ export const remove = async (request, response) => {
   try {
     const id = request.params.id;
     const submissions = await getSubmissionById(authenticated, id);
-    if (submissions) return response.status(400).send("");
+    if (submissions) return response.status(403).send("");
     else await removeAssignment(id);
     logger.info(`Assignment with ID ${id} has been successfully removed.`);
     return response.status(204).send("");
@@ -447,12 +448,17 @@ export const postSubmission = async (req, res) => {
     newSubmissionDetails.submission_date = new Date().toISOString();
     newSubmissionDetails.assignment_updated = new Date().toISOString();
     newSubmissionDetails.assignment_id = id;
-    newSubmissionDetails.attempts = submissions.length+1;
+
+    if (!validator.isURL(newSubmissionDetails.submission_url)) {
+      logger.warn("Submission API Invalid URL.");
+      return res.status(400).send("Invalid submission URL.");
+  }
+
     const submissions = await getSubmissionById(authenticated, id);
-    
+
     if (submissions.length >= assignment.num_of_attempts) {
       logger.warn("Submission API num of attempts exceeded");
-      return res.status(403).send("");
+      return response.status(403).send("");
     } else {
       const submissionDetails = await addSubmission(newSubmissionDetails);
       logger.info("Submission successfull.");
@@ -461,16 +467,16 @@ export const postSubmission = async (req, res) => {
       const userInfo = {
         email: user_id.emailid,
       };
-      
-      const assignmentId=newSubmissionDetails.assignment_id;
-      const attemptsCount=newSubmissionDetails.attempts;
       const url = newSubmissionDetails.submission_url;
+      const assignment_id = id;
+      const num_of_attempts = (submissions.length+1);
+      const email = user_id.email;
       const message = {
         userInfo,
-        assignmentId,
-        email,
         url,
-        attemptsCount
+        email,
+        num_of_attempts,
+        assignment_id,
       };
       sns.publish(
         {
@@ -480,14 +486,61 @@ export const postSubmission = async (req, res) => {
         (err, data) => {
           if (err) {
             logger.error("Error publishing to SNS:", err);
-            return response.status(500).send("Error submitting.", err);
+            return res.status(500).send("Error submitting " + JSON.stringify(err));
           } else {
-            logger.info("Submission successful:");
-            return res.status(200).send("Submission successful.");
+            logger.info("Submission successful:", data);
+            return res.status(200).send("Submission successful");
           }
         }
       );
     }
+  //   const id = req.params.id;
+  //   let newSubmissionDetails = req.body;
+  //   newSubmissionDetails.user_id = authenticated;
+  //   newSubmissionDetails.submission_date = new Date().toISOString();
+  //   newSubmissionDetails.assignment_updated = new Date().toISOString();
+  //   newSubmissionDetails.assignment_id = id;
+  //   newSubmissionDetails.attempts = submissions.length+1;
+  //   const submissions = await getSubmissionById(authenticated, id);
+    
+  //   if (submissions.length >= assignment.num_of_attempts) {
+  //     logger.warn("Submission API num of attempts exceeded");
+  //     return res.status(403).send("");
+  //   } else {
+  //     const submissionDetails = await addSubmission(newSubmissionDetails);
+  //     logger.info("Submission successfull.");
+  //     AWS.config.update({ region: "us-east-1" });
+  //     const sns = new AWS.SNS();
+  //     const userInfo = {
+  //       email: user_id.emailid,
+  //     };
+      
+  //     const assignmentId=newSubmissionDetails.assignment_id;
+  //     const attemptsCount=newSubmissionDetails.attempts;
+  //     const url = newSubmissionDetails.submission_url;
+  //     const message = {
+  //       userInfo,
+  //       assignmentId,
+  //       email,
+  //       url,
+  //       attemptsCount
+  //     };
+  //     sns.publish(
+  //       {
+  //         TopicArn: config.database.TopicArn,
+  //         Message: JSON.stringify(message),
+  //       },
+  //       (err, data) => {
+  //         if (err) {
+  //           logger.error("Error publishing to SNS:", err);
+  //           return response.status(500).send("Error submitting.", err);
+  //         } else {
+  //           logger.info("Submission successful:");
+  //           return res.status(200).send("Submission successful.");
+  //         }
+  //       }
+  //     );
+  //   }
   } catch (error) {
     console.error(error);
     logger.error(
