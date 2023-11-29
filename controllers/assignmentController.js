@@ -458,7 +458,7 @@ export const postSubmission = async (req, res) => {
 
     if (submissions.length >= assignment.num_of_attempts) {
       logger.warn("Submission API num of attempts exceeded");
-      return response.status(403).send("");
+      return res.status(403).send("");
     } else {
       const submissionDetails = await addSubmission(newSubmissionDetails);
       logger.info("Submission successfull.");
@@ -470,7 +470,7 @@ export const postSubmission = async (req, res) => {
       const url = newSubmissionDetails.submission_url;
       const assignment_id = id;
       const num_of_attempts = (submissions.length+1);
-      const email = user_id.email;
+      const email = user_id.emailid;
       const message = {
         userInfo,
         url,
