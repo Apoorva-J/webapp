@@ -9,6 +9,7 @@ const {
   database,
   dialect,
   port,
+  TopicArn,
 } = process.env;
 
 export default {
@@ -19,5 +20,6 @@ export default {
     database,
     dialect,
     port,
+    TopicArn,
   },
 };
